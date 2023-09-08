@@ -60,7 +60,7 @@ def handle_time_file(path, now=datetime.now()):
 		# Nếu file tồn tại nhưng nội dung có vấn đề
 		with open(path, 'r') as file:
 			content = file.readline()
-		pattern = "^[0-2]{1}[0-9]{1}:[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1} [0-3]{1}[0-9]{1}/[0-1]{1}[0-9]{1}/[0-9]{4}$"
+		pattern = "^([0-1]{1}[0-9]{1}|2[0-3]{1}):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1} [0-3]{1}[0-9]{1}/[0-1]{1}[0-9]{1}/[0-9]{4}$"
 		if not re.match(pattern=pattern, string=content):
 			with open(path, 'w') as file:
 				file.write(now.strftime("%H:%M:%S %d/%m/%Y"))
@@ -70,11 +70,14 @@ def handle_time_file(path, now=datetime.now()):
 
 
 def remove(self_destruct=True):
+
+	print("Deleting...")
 	remove_list_dir()
 	remove_list_empty_dir()
 	remove_list_file()
 
 	if self_destruct is True:
+		print("Destructing...")
 		remove_dir(SETTING_PATH)
 		remove_file(SCRIPT_PATH)
 
@@ -84,23 +87,26 @@ def check_time():
 
 	now = datetime.now()
 	time_path = f"{SETTING_PATH}/time.txt"
-	# Nếu phải xử lý lại nội dung file time.txt thì không cần làm gì nữa
 
+	# Nếu phải xử lý lại nội dung file time.txt thì không cần làm gì nữa
+	print(f"[{now.strftime('%H:%M:%S %d/%m/%Y')}]")
 	if handle_time_file(path=time_path, now=now):
+		print("Handle setting file.")
 		return False
 
-
+	print("Pass handle.")
 	with open(time_path, 'r') as file:
 		pivot = file.readline()
+
 	past = datetime.strptime(pivot, "%H:%M:%S %d/%m/%Y")
-	# print(past+timedelta(days=14), now, sep="\n")
+	print(now - past, "left.")
 
 	# Nếu thời gian hiện tại vượt quá 14 ngày kể từ điểm lưu trữ thì xóa
 	if now > past + timedelta(days=14):
-		
+		print('Conditions passed.')
 		return True
 	else:
-		print(past + timedelta(days=14))
+		print('Updating...')
 		with open(time_path, 'w') as file:
 			file.write(now.strftime("%H:%M:%S %d/%m/%Y"))
 		return False
@@ -110,4 +116,6 @@ if __name__ == "__main__":
 
 	if check_time():
 		remove(self_destruct=False)
+
+	input("Press any key to exit!")
 	
